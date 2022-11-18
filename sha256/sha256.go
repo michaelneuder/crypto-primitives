@@ -4,19 +4,20 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math/bits"
 )
 
 const (
-	h0 = 0x6a09e667
-	h1 = 0xbb67ae85
-	h2 = 0x3c6ef372
-	h3 = 0xa54ff53a
-	h4 = 0x510e527f
-	h5 = 0x9b05688c
-	h6 = 0x1f83d9ab
-	h7 = 0x5be0cd19
+	h0 = uint32(0x6a09e667)
+	h1 = uint32(0xbb67ae85)
+	h2 = uint32(0x3c6ef372)
+	h3 = uint32(0xa54ff53a)
+	h4 = uint32(0x510e527f)
+	h5 = uint32(0x9b05688c)
+	h6 = uint32(0x1f83d9ab)
+	h7 = uint32(0x5be0cd19)
 )
 
 var k [64]uint32 = [64]uint32{
@@ -49,8 +50,8 @@ func preprocess(in string) []byte {
 	return bytes
 }
 
-func sha256(in string) [64]byte {
-	out := [64]byte{}
+func sha256(in string) [32]byte {
+	out := [32]byte{}
 
 	preprocessed := preprocess(in)
 
@@ -64,22 +65,74 @@ func sha256(in string) [64]byte {
 	fmt.Printf("%x\n", w[:])
 
 	for i := 16; i < 64; i++ {
-		var out uint
+		var out, out2 uint32
 		buf := bytes.NewBuffer(w[i-15][:])
 		check(binary.Read(buf, binary.BigEndian, &out))
-		s0 := bits.RotateLeft(out, -7) ^ bits.RotateLeft(out, -18) ^ (out >> 3)
-		// s0 := (w[i-15] rightrotate  7) xor (w[i-15] rightrotate 18) xor (w[i-15] rightshift  3)
-		// s1 := (w[i-2] rightrotate 17) xor (w[i-2] rightrotate 19) xor (w[i-2] rightshift 10)
-		// w[i] := w[i-16] + s0 + w[i-7] + s1
+		s0 := bits.RotateLeft(uint(out), -7) ^ bits.RotateLeft(uint(out), -18) ^ (uint(out) >> 3)
+		buf = bytes.NewBuffer(w[i-2][:])
+		check(binary.Read(buf, binary.BigEndian, &out))
+		s1 := bits.RotateLeft(uint(out), -17) ^ bits.RotateLeft(uint(out), -19) ^ (uint(out) >> 10)
+		buf = bytes.NewBuffer(w[i-16][:])
+		check(binary.Read(buf, binary.BigEndian, &out))
+		buf = bytes.NewBuffer(w[i-7][:])
+		check(binary.Read(buf, binary.BigEndian, &out2))
+
+		wIns := [4]byte{}
+		binary.BigEndian.PutUint32(wIns[:], out+uint32(s0)+out2+uint32(s1))
+		w[i] = wIns
 	}
+
+	a := h0
+	b := h1
+	c := h2
+	d := h3
+	e := h4
+	f := h5
+	g := h6
+	h := h7
+
+	for i := 0; i < 64; i++ {
+		S1 := bits.RotateLeft(uint(e), -6) ^ bits.RotateLeft(uint(e), -11) ^ bits.RotateLeft(uint(e), -25)
+		ch := (uint(e) & uint(f)) ^ (^uint(e) & uint(g))
+
+		wui32 := binary.BigEndian.Uint32(w[i][:])
+		temp1 := h + uint32(S1) + uint32(ch) + k[i] + wui32
+		S0 := bits.RotateLeft(uint(a), -2) ^ bits.RotateLeft(uint(a), -13) ^ bits.RotateLeft(uint(a), -22)
+		maj := (a & b) ^ (a & c) ^ (b & c)
+		temp2 := uint32(S0) + maj
+
+		h = g
+		g = f
+		f = e
+		e = d + temp1
+		d = c
+		c = b
+		b = a
+		a = temp1 + temp2
+	}
+
+	h0out := h0 + a
+	h1out := h1 + b
+	h2out := h2 + c
+	h3out := h3 + d
+	h4out := h4 + e
+	h5out := h5 + f
+	h6out := h6 + g
+	h7out := h7 + h
+
+	binary.BigEndian.PutUint32(out[:4], h0out)
+	binary.BigEndian.PutUint32(out[4:8], h1out)
+	binary.BigEndian.PutUint32(out[8:12], h2out)
+	binary.BigEndian.PutUint32(out[12:16], h3out)
+	binary.BigEndian.PutUint32(out[16:20], h4out)
+	binary.BigEndian.PutUint32(out[20:24], h5out)
+	binary.BigEndian.PutUint32(out[24:28], h6out)
+	binary.BigEndian.PutUint32(out[28:32], h7out)
 	return out
 }
 
 func main() {
-	// out := sha256("hello")
-	// fmt.Printf("output: %x", out)
-
 	res := sha256("abc")
-	fmt.Printf("preprocess: \"abc\" = %08b\n", res)
+	fmt.Printf("res: \"abc\" = %x\n", hex.EncodeToString(res[:]))
 	fmt.Printf("len = %d\n", len(res))
 }
