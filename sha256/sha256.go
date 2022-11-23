@@ -40,22 +40,34 @@ func rotateRight(in, k uint32) uint {
 }
 
 func preprocess(in string) []byte {
+	lenIn := uint64(len(in) * 8)
+	numZeros := (512 - (lenIn + 8 + 64)) / 8
+	// fmt.Printf("numZeros=%d\n", numZeros)
+
 	bytes := []byte(in)
 	bytes = append(bytes, byte(0b10000000))
-	for i := 0; i < 52; i++ {
-		bytes = append(bytes, byte(0b0))
+	for i := 0; i < int(numZeros); i++ {
+		bytes = append(bytes, byte(0b00))
 	}
-	for i := 0; i < 7; i++ {
-		bytes = append(bytes, byte(0b0))
+
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, lenIn)
+	// fmt.Printf("lenIN binary0=%b\n", b)
+	for i := 0; i < 8; i++ {
+		bytes = append(bytes, b[i])
 	}
-	bytes = append(bytes, byte(0b00011000))
+	// fmt.Printf("lenIN binary1=%b\n", bytes[64-8:])
 	return bytes
 }
 
 func sha256(in string) [32]byte {
+	if len(in) > 64 {
+		panic("message too long! only support messages < 64 characters")
+	}
 	preprocessed := preprocess(in)
 
-	// fmt.Printf("*** padded message=%x\n", preprocessed)
+	fmt.Printf("*** padded message=%x\n", preprocessed)
+	fmt.Printf("*** padded message=%08b\n", preprocessed)
 
 	// First just use a single chunk.
 	w := [64][4]byte{}
@@ -164,6 +176,6 @@ func sha256(in string) [32]byte {
 }
 
 func main() {
-	res := sha256("def")
-	fmt.Printf("%x\n", res[:])
+	res := sha256("abc")
+	fmt.Printf("%0x\n", res[:])
 }

@@ -195,4 +195,4 @@ def _rotate_right(num: int, shift: int, size: int = 32):
 
 if __name__ == "__main__":
     # generate_hash("abc").hex()
-    print(generate_hash("def").hex())
+    print(generate_hash("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz").hex())
