@@ -57,6 +57,8 @@ func preprocess(in string) []byte {
 		bytes = append(bytes, b[i])
 	}
 	// fmt.Printf("lenIN binary1=%b\n", bytes[64-8:])
+	// fmt.Printf("*** preprocessed %v\n", bytes)
+	// fmt.Printf("*** length %v\n", len(bytes))
 	return bytes
 }
 
@@ -87,6 +89,8 @@ func sha256(in string) [32]byte {
 		buf = bytes.NewBuffer(w[i-15][:])
 		check(binary.Read(buf, binary.BigEndian, &temp))
 		s0 := rotateRight(temp, 7) ^ rotateRight(temp, 18) ^ uint(temp>>3)
+
+		fmt.Printf("*** i-15: %d, s0: %d\n", i-15, s0)
 		buf = bytes.NewBuffer(w[i-2][:])
 		check(binary.Read(buf, binary.BigEndian, &temp))
 		s1 := rotateRight(temp, 17) ^ rotateRight(temp, 19) ^ uint(temp>>10)
@@ -102,7 +106,8 @@ func sha256(in string) [32]byte {
 		binary.BigEndian.PutUint32(wIns[:], out0+uint32(s0)+out1+uint32(s1))
 		w[i] = wIns
 	}
-	// fmt.Printf("*** message schedule=%x\n", w[:])
+	panic("here")
+	fmt.Printf("*** message schedule=%x\n", w[:])
 
 	a := h0
 	b := h1
