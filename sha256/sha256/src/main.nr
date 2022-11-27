@@ -7,33 +7,14 @@ global h5: comptime u32 = 0x9b05688c;
 global h6: comptime u32 = 0x1f83d9ab;
 global h7: comptime u32 = 0x5be0cd19;
 
-// Shift a u32 to the left by a variable amount.
-fn leftShift32(input : u32, amount : u8) -> u32 {
-    let mut res : u32 = input;
-    for i in 0..32 {
-        let intI = i as u8;
-        if intI < amount {
-            res = res * 2;
-        }
-    };
-    res
-}
-
-// Shift a u32 to the right by a variable amount.
-fn rightShift32(input : u32, amount : u8) -> u32 {
-    let mut res : u32 = input;
-    let pow2 : u32 = leftShift32(1, amount);
-    res / pow2
-}
-
 // Rotate a u32 to the right by a variable amount.
-fn rotateRight32(input : u32, amount : u8) -> u32 {
-    let res = rightShift32(input, amount) + leftShift32(input, 32-amount);
+fn rotateRight32(input : u32, amount : u32) -> u32 {
+    let res = (input >> amount) + (input << (32-amount));
     res
 }
 
 fn s0(input : u32) -> u32 {
-    let res = rotateRight32(input, 7) ^ rotateRight32(input, 18) ^ rightShift32(input, 3);
+    let res = rotateRight32(input, 7) ^ rotateRight32(input, 18) ^ (input >> 3);
     res
 }
 
@@ -73,11 +54,11 @@ fn createMessageSchedule(preprocessed : [u8; 64]) -> [u32; 64] {
     for i in 0..16 {
         // Shift and LAND bits of the u32 message chunk.
         let mut temp : u32 = preprocessed[4*i] as u32;
-        let mut out = leftShift32(temp, 24);
+        let mut out = (temp << 24);
         temp = preprocessed[4*i+1] as u32;
-        out = out + leftShift32(temp, 16);
+        out = out + (temp << 16);
         temp = preprocessed[4*i+2] as u32;
-        out = out + leftShift32(temp, 8);
+        out = out + (temp << 8);
         temp = preprocessed[4*i+3] as u32;
         out = out + temp;
         output[i] = out;
@@ -90,7 +71,7 @@ fn createMessageSchedule(preprocessed : [u8; 64]) -> [u32; 64] {
         output[i] = s0val;
         if i == 30 {
             constrain inp == 24;
-            let s0val2 = s0(inp);
+            let s0val2 = s0(24);
             constrain s0val2 == 805699587;
         }
     };
@@ -135,7 +116,7 @@ fn main(input : pub [u8; 64], length : pub u8) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ];
-    for i in 0..37 {
+    for i in 0..64 {
         constrain messageSchedule[i] == expectedSchedule[i];
     };
 }
