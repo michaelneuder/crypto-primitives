@@ -69,7 +69,7 @@ func sha256(in string) [32]byte {
 	preprocessed := preprocess(in)
 
 	fmt.Printf("*** padded message=%x\n", preprocessed)
-	fmt.Printf("*** padded message=%08b\n", preprocessed)
+	// fmt.Printf("*** padded message=%08b\n", preprocessed)
 
 	// First just use a single chunk.
 	w := [64][4]byte{}
@@ -79,6 +79,7 @@ func sha256(in string) [32]byte {
 		copy(w[i][:], preprocessed[4*i:4*(i+1)])
 	}
 
+	tempArr := [64]uint32{}
 	for i := 16; i < 64; i++ {
 		var out0, out1, temp uint32
 		buf := bytes.NewBuffer(w[i-7][:])
@@ -90,24 +91,33 @@ func sha256(in string) [32]byte {
 		check(binary.Read(buf, binary.BigEndian, &temp))
 		s0 := rotateRight(temp, 7) ^ rotateRight(temp, 18) ^ uint(temp>>3)
 
-		fmt.Printf("*** i-15: %d, s0: %d\n", i-15, s0)
 		buf = bytes.NewBuffer(w[i-2][:])
 		check(binary.Read(buf, binary.BigEndian, &temp))
 		s1 := rotateRight(temp, 17) ^ rotateRight(temp, 19) ^ uint(temp>>10)
-
-		// if i == 17 {
-		// 	buf = bytes.NewBuffer(w[i-2][:])
-		// 	check(binary.Read(buf, binary.BigEndian, &temp))
-		// 	fmt.Printf("*** first rotation of %d=%d\n", temp, rotateRight(temp, 17))
-		// 	fmt.Printf("*** term1=%d,term2=%d,term3=%d,term4=%d\n", s0, out0, s1, out1)
-		// }
+		// fmt.Printf("*** i-15: %d, w[i-15]: %d, s0: %d, s1: %d \n", i-15, w[i-15], s0, s1)
+		// fmt.Printf("***** s0 + s1: %d \n", s0+s1)
 
 		wIns := [4]byte{}
 		binary.BigEndian.PutUint32(wIns[:], out0+uint32(s0)+out1+uint32(s1))
+		tempArr[i] = out0 + uint32(s0) + out1 + uint32(s1)
+
+		if i == 16 {
+			// buf = bytes.NewBuffer(w[i-2][:])
+			// check(binary.Read(buf, binary.BigEndian, &temp))
+			// fmt.Printf("*** first rotation of %d=%d\n", temp, rotateRight(temp, 17))
+			// fmt.Printf("*** term1=%d,term2=%d,term3=%d,term4=%d\n", s0, out0, s1, out1)
+			// fmt.Printf("*** wIns: %x\n", wIns)
+			// panic("here")
+		}
+
 		w[i] = wIns
 	}
-	panic("here")
 	fmt.Printf("*** message schedule=%x\n", w[:])
+	// var sInts []string
+	// for _, i := range tempArr {
+	// 	sInts = append(sInts, strconv.Itoa(int(i)))
+	// }
+	// fmt.Println(strings.Join(sInts, ", "))
 
 	a := h0
 	b := h1
@@ -128,17 +138,19 @@ func sha256(in string) [32]byte {
 		maj := (uint(a) & uint(b)) ^ (uint(a) & uint(c)) ^ (uint(b) & uint(c))
 		temp2 := (S0 + maj) % uint(1<<32)
 
-		if i == 63 {
-			// fmt.Printf("*** e=%d\n", e)
-			// (in >> k) | (in << (32 - k))
-			// fmt.Printf("*** shift e 6=%d\n", e>>6)
-			// fmt.Printf("*** shift e left 26=%d\n", uint(e)<<26)
-			// fmt.Printf("*** rot e 6=%d\n", rotateRight(e, 6))
-			// fmt.Printf("*** S1=%d\n", S1)
-			// fmt.Printf("*** c1=%d\n", ch)
-			// fmt.Printf("*** t1=%d\n", temp1)
-			// fmt.Printf("*** t2=%d\n", temp2)
-		}
+		// if i == 0 {
+		// 	fmt.Printf("*** e=%d\n", e)      // 01010001000011100101001001111111
+		// 	fmt.Printf("*** not e=%d\n", ^e) // 10101110111100011010110110000000
+		// 	// (in >> k) | (in << (32 - k))
+		// 	fmt.Printf("*** shift e 6=%d\n", e>>6)
+		// 	fmt.Printf("*** shift e left 26=%d\n", uint(e)<<26)
+		// 	fmt.Printf("*** rot e 6=%d\n", rotateRight(e, 6))
+		// 	fmt.Printf("*** S1=%d\n", S1)
+		// 	fmt.Printf("*** c1=%d\n", ch)
+		// 	fmt.Printf("*** t1=%d\n", temp1)
+		// 	fmt.Printf("*** t2=%d\n", temp2)
+		// }
+		// panic("here")
 		h = g
 		g = f
 		f = e
@@ -147,6 +159,18 @@ func sha256(in string) [32]byte {
 		c = b
 		b = a
 		a = uint32((temp1 + temp2) % uint(1<<32))
+
+		// if i == 0 {
+		// 	fmt.Printf("*** a=%d\n", a)
+		// 	fmt.Printf("*** b=%d\n", b)
+		// 	fmt.Printf("*** c=%d\n", c)
+		// 	fmt.Printf("*** d=%d\n", d)
+		// 	fmt.Printf("*** e=%d\n", e)
+		// 	fmt.Printf("*** f=%d\n", f)
+		// 	fmt.Printf("*** g=%d\n", g)
+		// 	fmt.Printf("*** h=%d\n", h)
+		// }
+		// panic("here")
 	}
 
 	h0out := uint32((uint(h0) + uint(a)) % uint(1<<32))
@@ -159,14 +183,14 @@ func sha256(in string) [32]byte {
 	h7out := uint32((uint(h7) + uint(h)) % uint(1<<32))
 
 	// fmt.Printf("*** a=%d\n", a)
-	// fmt.Printf("*** h0out=%d\n", h0out)
-	// fmt.Printf("*** h1out=%d\n", h1out)
-	// fmt.Printf("*** h2out=%d\n", h2out)
-	// fmt.Printf("*** h3out=%d\n", h3out)
-	// fmt.Printf("*** h4out=%d\n", h4out)
-	// fmt.Printf("*** h5out=%d\n", h5out)
-	// fmt.Printf("*** h6out=%d\n", h6out)
-	// fmt.Printf("*** h7out=%d\n", h7out)
+	fmt.Printf("*** h0out=%d\n", h0out)
+	fmt.Printf("*** h1out=%d\n", h1out)
+	fmt.Printf("*** h2out=%d\n", h2out)
+	fmt.Printf("*** h3out=%d\n", h3out)
+	fmt.Printf("*** h4out=%d\n", h4out)
+	fmt.Printf("*** h5out=%d\n", h5out)
+	fmt.Printf("*** h6out=%d\n", h6out)
+	fmt.Printf("*** h7out=%d\n", h7out)
 
 	out := [32]byte{}
 	binary.BigEndian.PutUint32(out[:4], h0out)
@@ -183,4 +207,5 @@ func sha256(in string) [32]byte {
 func main() {
 	res := sha256("abc")
 	fmt.Printf("%0x\n", res[:])
+	fmt.Printf("%d\n", res[:])
 }
