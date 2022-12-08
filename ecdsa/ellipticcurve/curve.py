@@ -3,8 +3,8 @@
 #
 # y^2 = x^3 + A*x + B (mod P)
 #
-from .math import Math
-from .point import Point
+from math1 import Math1
+from point import Point
 
 
 class CurveFp:
@@ -39,7 +39,7 @@ class CurveFp:
 
     def y(self, x, isEven):
         ySquared = (pow(x, 3, self.P) + self.A * x + self.B) % self.P
-        y = Math.modularSquareRoot(ySquared, self.P)
+        y = Math1.modularSquareRoot(ySquared, self.P)
         if isEven != (y % 2 == 0):
             y = self.P - y
         return y

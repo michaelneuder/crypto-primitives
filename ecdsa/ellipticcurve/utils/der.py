@@ -1,6 +1,6 @@
 from datetime import datetime
-from .oid import oidToHex, oidFromHex
-from .binary import hexFromInt, intFromHex, byteStringFromHex, bitsFromHex
+from oid import oidToHex, oidFromHex
+from binary import hexFromInt, intFromHex, byteStringFromHex, bitsFromHex
 
 
 class DerFieldType:

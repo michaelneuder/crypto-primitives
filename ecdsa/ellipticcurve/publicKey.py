@@ -1,9 +1,9 @@
-from .math import Math
-from .point import Point
-from .curve import secp256k1, getByOid
-from .utils.pem import getPemContent, createPem
-from .utils.der import hexFromInt, parse, DerFieldType, encodeConstructed, encodePrimitive
-from .utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
+from math import Math
+from point import Point
+from curve import secp256k1, getByOid
+from utils.pem import getPemContent, createPem
+from utils.der import hexFromInt, parse, DerFieldType, encodeConstructed, encodePrimitive
+from utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
 
 
 class PublicKey:

@@ -1,4 +1,4 @@
-from .binary import intFromHex, hexFromInt
+from binary import intFromHex, hexFromInt
 
 
 def oidFromHex(hexadecimal):

@@ -1,10 +1,10 @@
-from .math import Math
-from .utils.integer import RandomInteger
-from .utils.pem import getPemContent, createPem
-from .utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
-from .utils.der import hexFromInt, parse, encodeConstructed, DerFieldType, encodePrimitive
-from .curve import secp256k1, getByOid
-from .publicKey import PublicKey
+from math import Math
+from utils.integer import RandomInteger
+from utils.pem import getPemContent, createPem
+from utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
+from utils.der import hexFromInt, parse, encodeConstructed, DerFieldType, encodePrimitive
+from curve import secp256k1, getByOid
+from publicKey import PublicKey
 
 
 class PrivateKey:

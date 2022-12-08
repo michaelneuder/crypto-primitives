@@ -1,5 +1,5 @@
 from base64 import b64encode, b64decode
-from .compatibility import safeHexFromBinary, safeBinaryFromHex, toString
+from compatibility import safeHexFromBinary, safeBinaryFromHex, toString
 
 
 def hexFromInt(number):

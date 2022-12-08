@@ -1,9 +1,9 @@
 from hashlib import sha256
-from .signature import Signature
-from .math import Math
-from .utils.integer import RandomInteger
-from .utils.binary import numberFromByteString
-from .utils.compatibility import *
+from signature import Signature
+from math import Math
+from utils.integer import RandomInteger
+from utils.binary import numberFromByteString
+from utils.compatibility import *
 
 
 class Ecdsa:
